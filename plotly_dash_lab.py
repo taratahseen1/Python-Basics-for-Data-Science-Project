@@ -45,8 +45,7 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                 #dcc.RangeSlider(id='payload-slider',...)
                                 dcc.RangeSlider(id='payload-slider',
                                                 min=0, max=10000, step=1000,
-                                                marks={0: '0',
-                                                    100: '100'},
+                                                marks={x : str(x) for x in range(0,10000,1000)},
                                                 value=[min_payload, max_payload]),
                                 # TASK 4: Add a scatter chart to show the correlation between payload and launch success
                                 html.Div(dcc.Graph(id='success-payload-scatter-chart')),
@@ -62,14 +61,15 @@ def get_pie_chart(entered_site):
     filtered_df = spacex_df
     if entered_site == 'ALL':
         fig = px.pie(spacex_df, values='class', 
-        names='pie chart names', 
+        names='Launch Site', 
         title='Total Success Launches by Site')
         return fig
     else:
         # return the outcomes piechart for a selected site
-        fig = px.pie(spacex_df[spacex_df['Launch Site']==entered_site],
-        values='class', 
-        names='pie chart names', 
+        filtered_df = spacex_df.groupby(['Launch Site', 'class']).size().reset_index(name='count')
+        fig = px.pie(filtered_df,
+        values='count', 
+        names='class', 
         title=f'Total Success Launches for {entered_site}')
         return fig
 
@@ -80,14 +80,22 @@ def get_pie_chart(entered_site):
               Input(component_id='payload-slider', component_property='value')])
 
 def get_payload_scatter_chart(entered_site, payload):
+    [min_payload, max_payload] = payload
     if entered_site == 'ALL':
-        fig = px.scatter(spacex_df, x = 'class',
-        y='Payload Mass (kg)',
+        fig_df = spacex_df.loc[(spacex_df['Payload Mass (kg)']>min_payload) & (spacex_df['Payload Mass (kg)']<max_payload)]
+        fig = px.scatter(fig_df, y = 'class',
+        x='Payload Mass (kg)',
         color = 'Booster Version Category')
     else:
-        fig = px.scatter(spacex_df[spacex_df['Launch Site']==entered_site],
-        x='class',
-        y='Payload Mass (kg)',
+        filtered_df = (
+            spacex_df.
+            loc[
+                (spacex_df['Payload Mass (kg)']>min_payload) & 
+                (spacex_df['Payload Mass (kg)']<max_payload) &
+                (spacex_df['Launch Site']==entered_site)])
+        fig = px.scatter(filtered_df,
+        y='class',
+        x='Payload Mass (kg)',
         color = 'Booster Version Category')
     return fig
 
