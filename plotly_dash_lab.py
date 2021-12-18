@@ -66,7 +66,10 @@ def get_pie_chart(entered_site):
         return fig
     else:
         # return the outcomes piechart for a selected site
-        filtered_df = spacex_df.groupby(['Launch Site', 'class']).size().reset_index(name='count')
+        filtered_df = (
+            spacex_df.
+            loc[(spacex_df['Launch Site']==entered_site)].
+            groupby(['Launch Site', 'class']).size().reset_index(name='count'))
         fig = px.pie(filtered_df,
         values='count', 
         names='class', 
@@ -81,6 +84,10 @@ def get_pie_chart(entered_site):
 
 def get_payload_scatter_chart(entered_site, payload):
     [min_payload, max_payload] = payload
+    print('DATA TYPE MIN_PAYLOAD: ', type(min_payload))
+    print(payload)
+    print('MIN PAYLOAD IS ', min_payload)
+    print('MAX PAYLOAD IS ', max_payload)
     if entered_site == 'ALL':
         fig_df = spacex_df.loc[(spacex_df['Payload Mass (kg)']>min_payload) & (spacex_df['Payload Mass (kg)']<max_payload)]
         fig = px.scatter(fig_df, y = 'class',
